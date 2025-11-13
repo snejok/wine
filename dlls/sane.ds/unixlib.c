@@ -215,7 +215,15 @@ static NTSTATUS get_identity( void *args )
     static int cur_dev;
 
     detect_sane_devices();
-    if (!device_list[cur_dev]) return STATUS_DEVICE_NOT_CONNECTED;
+
+    if (!device_list[cur_dev] || !device_list[cur_dev]->model ||
+        !device_list[cur_dev]->vendor ||
+        !device_list[cur_dev]->name)
+    {
+        cur_dev = 0; /* wrap to begin */
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
     id->ProtocolMajor = TWON_PROTOCOLMAJOR;
     id->ProtocolMinor = TWON_PROTOCOLMINOR;
     id->SupportedGroups = DG_CONTROL | DG_IMAGE | DF_DS2;
@@ -223,11 +231,6 @@ static NTSTATUS get_identity( void *args )
     lstrcpynA (id->Manufacturer, device_list[cur_dev]->vendor, sizeof(id->Manufacturer) - 1);
     lstrcpynA (id->ProductFamily, device_list[cur_dev]->model, sizeof(id->ProductFamily) - 1);
     cur_dev++;
-
-    if (!device_list[cur_dev] || !device_list[cur_dev]->model	||
-        !device_list[cur_dev]->vendor ||
-	!device_list[cur_dev]->name)
-	cur_dev = 0; /* wrap to begin */
 
     return STATUS_SUCCESS;
 }
